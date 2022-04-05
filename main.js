@@ -17,6 +17,7 @@ const getNotes = async () => {
 };
 
 const get = async function () {
+  console.log("get ran");
   const resp = await fetch("http://localhost:8888/connect.php", {
     method: "GET",
     mode: "cors",
@@ -27,12 +28,35 @@ const get = async function () {
 
   const json = await resp.json();
   for (const index in json) {
+    const id = json[index].id;
     const li = document.createElement("li");
+    li.classList.add("item");
     const note = document.createTextNode(json[index].note);
+
+    const deleteButton = document.createElement("button");
+    deleteButton.classList.add("delete-button");
+    const x = document.createTextNode("x");
+    deleteButton.appendChild(x);
+
+    deleteButton.addEventListener("click", async (e) => {
+      console.log(id);
+      await fetch("http://localhost:8888/delete.php", {
+        methond: "DELETE",
+        mode: "cors",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(id),
+      }).then((res) => console.log("res ", res));
+    });
+
     li.appendChild(note);
+    li.appendChild(deleteButton);
     list.appendChild(li);
   }
 };
+
+get();
 
 const post = async function (title, note) {
   const response = await fetch("http://localhost:8888/createnote.php", {
@@ -43,18 +67,20 @@ const post = async function (title, note) {
     },
     body: JSON.stringify({ title, note }),
   });
-  return response.text();
 };
 
 form.addEventListener("submit", (event) => {
   const url = "http://localhost:8888/createnote.php";
   event.preventDefault();
-  const title = form.elements["title"].value;
-  const note = form.elements["note"].value;
+  let title = form.elements["title"].value;
+  let note = form.elements["note"].value;
   const data = { title, note };
   // post(title, note);
   post(title, note).then((data) => {
-    console.log(data); // JSON data parsed by `data.json()` call
+    const li = document.createElement("li");
+    li.classList.add("item");
+    const newNote = document.createTextNode(note);
+    li.appendChild(newNote);
+    list.appendChild(li);
   });
 });
-document.querySelector(".load").addEventListener("click", get);
